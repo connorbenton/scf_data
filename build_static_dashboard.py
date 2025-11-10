@@ -7,10 +7,17 @@ import plotly.io as pio
 # ------------------------------
 FIG_PATHS = {
     "NETWORTH": "plotly NETWORTH percentile graph_age filter.py",
+    "NETWORTH2": "final NETWORTH category breakdown.py",
+    "FIN2": "final NETWORTH to FIN.py",
+    "NFIN2": "final NETWORTH to NFIN.py",
+    "DEBT2": "final NETWORTH to DEBT.py",
     "FIN":  "final FIN percentile graph age filter correct weights crosscheck OK tails.py",
     "DEBT": "final DEBT percentile graph age filter correct weights crosscheck OK tails.py",
     "NFIN": "final NFIN percentile graph age filter correct weights crosscheck OK tails.py",
 }
+
+
+# Not showing the original FIN/NFIN/DEBT graphs, as their unique percentile curves are misleading to the overall picture of "components of household net worth"
 
 # ------------------------------
 # Load module and get figure JSON
@@ -83,9 +90,15 @@ html_template = f"""<!DOCTYPE html>
 
 <div class="tabs">
   <div class="tab active" data-key="NETWORTH">Total Net Worth (by Age and Income)</div>
-  <div class="tab" data-key="FIN">FIN (Financial assets breakdown)</div>
-  <div class="tab" data-key="NFIN">NFIN (Nonfinancial assets breakdown)</div>
-  <div class="tab" data-key="DEBT">DEBT (Liabilities breakdown)</div>
+  <div class="tab" data-key="NETWORTH2">Total Net Worth (by Age and Family/Owning Status)</div>
+  <div class="tab" data-key="FIN2">Total Net Worth (Financial asset breakdown)</div>
+  <div class="tab" data-key="NFIN2">Total Net Worth (Nonfinancial asset breakdown)</div>
+  <div class="tab" data-key="DEBT2">Total Net Worth (Debt breakdown)</div>
+  <!--
+  <div class="tab" data-key="FIN">FIN Only (Financial assets breakdown)</div>
+  <div class="tab" data-key="NFIN">NFIN Only (Nonfinancial assets breakdown)</div>
+  <div class="tab" data-key="DEBT">DEBT Only (Liabilities breakdown)</div>
+  -->
 </div>
 
 <div class="chart-frame">
@@ -94,9 +107,15 @@ html_template = f"""<!DOCTYPE html>
 
 <!-- Embed figure JSON safely -->
 <script id="fig-NETWORTH"  type="application/json">{fig_json["NETWORTH"]}</script>
+<script id="fig-NETWORTH2"  type="application/json">{fig_json["NETWORTH2"]}</script>
+<script id="fig-FIN2"  type="application/json">{fig_json["FIN2"]}</script>
+<script id="fig-NFIN2" type="application/json">{fig_json["NFIN2"]}</script>
+<script id="fig-DEBT2" type="application/json">{fig_json["DEBT2"]}</script>
+<!--
 <script id="fig-FIN"  type="application/json">{fig_json["FIN"]}</script>
 <script id="fig-DEBT" type="application/json">{fig_json["DEBT"]}</script>
 <script id="fig-NFIN" type="application/json">{fig_json["NFIN"]}</script>
+-->
 
 <script>
 (function() {{
@@ -104,9 +123,10 @@ html_template = f"""<!DOCTYPE html>
   // ---- Registry holds the ORIGINAL JSON, never mutated ----
   var registry = {{
     NETWORTH: JSON.parse(document.getElementById('fig-NETWORTH').textContent),
-    FIN:      JSON.parse(document.getElementById('fig-FIN').textContent),
-    DEBT:     JSON.parse(document.getElementById('fig-DEBT').textContent),
-    NFIN:     JSON.parse(document.getElementById('fig-NFIN').textContent)
+    NETWORTH2: JSON.parse(document.getElementById('fig-NETWORTH2').textContent),
+    FIN2:      JSON.parse(document.getElementById('fig-FIN2').textContent),
+    DEBT2:     JSON.parse(document.getElementById('fig-DEBT2').textContent),
+    NFIN2:     JSON.parse(document.getElementById('fig-NFIN2').textContent),
   }};
 
   // Return a deep-cloned figure so Plotly/react/legend changes never mutate registry

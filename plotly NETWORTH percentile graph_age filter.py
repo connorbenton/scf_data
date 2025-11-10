@@ -83,11 +83,11 @@ def get_figure() -> go.Figure:
     df = df[df["wgt"] > 0].copy()
 
     age_labels = ["All ages", "<35", "35–44", "45–54", "55–64", "65–74", "≥75"]
-    inc_labels = ["<20", "20–39.9", "40–59.9", "60–79.9", "80–89.9", "90–100"]
+    inc_labels = ["<20th percentile income", "20–39.9", "40–59.9", "60–79.9", "80–89.9", "90–100"]
 
     styles = {
         "All incomes": dict(width=3),
-        "<20":         dict(width=2, dash="dot"),
+        "<20th percentile income":         dict(width=2, dash="dot"),
         "20–39.9":     dict(width=2, dash="dash"),
         "40–59.9":     dict(width=2, dash="longdash"),
         "60–79.9":     dict(width=2, dash="dashdot"),
@@ -134,15 +134,22 @@ def get_figure() -> go.Figure:
 
         # dynamic y-range per age: include master + all bins
         all_ys = [vy_all] + [curves_by_age[lbl][lab][1] for lab in inc_labels]
-        pos_vals = np.concatenate([y[np.isfinite(y) & (y > 0)] for y in all_ys]) if len(all_ys) else np.array([])
-        if pos_vals.size == 0:
-            ymin, ymax = 1.0, 100.0
+
+        # dynamic y-range per age (include master + all cats)
+        pos_vals = np.concatenate([y[np.isfinite(y) & (y > 0)] for y in all_ys]) \
+                   if len(all_ys) else np.array([])
+
+        if pos_vals.size == 0 or (vy_all.size == 0):
+            # Keep bottom fixed at 10^2 = 100; degenerate upper bound if no data
+            y_ranges.append((2.0, 2.0))
         else:
-            ymin = float(np.nanmin(pos_vals)) / 1.2  # pad a little
-            ymax = float(np.nanpercentile(pos_vals, 99.5)) * 1.10  # stable upper
-            ymin = max(ymin, 1e-2)  # guard for log
-            ymax = max(ymax, 10.0)
-        y_ranges.append((np.log10(ymin), np.log10(ymax)))
+            # hard_max = true max of the master NW curve for this age group
+            hard_max = float(np.nanmax(vy_all))
+            # soft_max = robust cap across all displayed series (p99.9)
+            soft_max = float(np.nanpercentile(pos_vals, 99.9))
+            ymax = max(hard_max, soft_max) * 1.25
+            # Keep bottom fixed at 10^2 = 100
+            y_ranges.append((2.0, np.log10(ymax)))
 
     # ---------- build 7 traces (master + 6 bins) ----------
     default_age = age_labels[0]
@@ -179,7 +186,7 @@ def get_figure() -> go.Figure:
             method="update",
             args=[
                 {"x": xs, "y": ys, "text": texts, "name": names},
-                {"yaxis": {"type": "log", "autorange": False, "range": [lo_log, hi_log]}}
+                {"yaxis": {"type": "log", "autorange": False, "range": [2, hi_log]}}
             ]
         ))
 
@@ -197,7 +204,7 @@ def get_figure() -> go.Figure:
         yaxis=dict(
             title="NET WORTH (log scale)",
             type="log", tickformat=",", exponentformat="none", showexponent="none",
-            autorange=False, range=list(y_ranges[0]),
+            autorange=False, range=(2, y_ranges[0][1]),
         ),
         template="plotly_white",
         hovermode="x unified",
